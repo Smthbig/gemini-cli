@@ -225,21 +225,25 @@ function summarize_old_history() {
 
 # ========== COPILOT CODER ==========
 function coder_mode_menu() {
-  while true; do
-    echo -e "\n${BOLD}--- Copilot Mode ---${RESET}"
-    echo "1) Generate code"
-    echo "2) Explain code"
-    echo "3) Improve code"
-    echo "4) Back"
-    read -rp "Choose: " c
-    case "$c" in
-      1) generate_code_file ;;
-      2) explain_code_file ;;
-      3) edit_code_file ;;
-      4) return ;;
-      *) echo -e "${YELLOW}Invalid.${RESET}" ;;
-    esac
-  done
+    while true; do
+        echo -e "\n${BOLD}🧠 Copilot Coder Mode${RESET}"
+        echo "1) 🛠 Generate new code"
+        echo "2) 📖 Explain existing code"
+        echo "3) ✍️ Improve code"
+        echo "4) 🐞 Fix bugs in code"
+        echo "5) 📝 Generate README or docs"
+        echo "6) 🔙 Back to main menu"
+        read -rp "Choose an option [1-6]: " c
+        case "$c" in
+            1) generate_code_file ;;
+            2) explain_code_file ;;
+            3) edit_code_file ;;
+            4) fix_bugs_in_code ;;
+            5) generate_docs ;;
+            6) return ;;
+            *) echo -e "${YELLOW}Invalid choice. Please try again.${RESET}" ;;
+        esac
+    done
 }
 
 function generate_code_file() {
@@ -254,10 +258,33 @@ function explain_code_file() {
   send_request "Explain this code:\n\n$(<"$fp")"
 }
 
+function fix_bugs_in_code() {
+    read -rp "📂 File to debug: " fp
+    [[ ! -f "$fp" ]] && echo -e "${RED}File not found${RESET}" && return
+    read -rp "💾 Create backup? (y/n): " backup
+    [[ "$backup" == [yY] ]] && cp "$fp" "$fp.bak" && echo -e "${CYAN}🔐 Backup saved to $fp.bak${RESET}"
+
+    call_request_with_continuation "Find and fix bugs in the following code:\n\n$(<"$fp")" "$fp"
+}
+
+function generate_docs() {
+    read -rp "📂 File to document: " fp
+    [[ ! -f "$fp" ]] && echo -e "${RED}File not found${RESET}" && return
+    read -rp "📄 Output doc filename (e.g., README.md): " out
+    [[ -z "$out" ]] && out="README.md"
+
+    call_request_with_continuation "Generate a clean, professional README or documentation file based on this source code:\n\n$(<"$fp")" "$out"
+}
+
 function edit_code_file() {
-  read -rp "📂 File to improve: " fp
-  read -rp "✍️ What to change/add? " instr
-  call_request_with_continuation "Modify this code:\n\n$(<"$fp")\n\nInstructions:\n$instr" "$fp"
+    read -rp "📂 File to improve: " fp
+    [[ ! -f "$fp" ]] && echo -e "${RED}File not found${RESET}" && return
+    read -rp "✍️ What to change/add? " instr
+    [[ -z "$instr" ]] && echo -e "${YELLOW}No instruction provided.${RESET}" && return
+    read -rp "💾 Create backup? (y/n): " backup
+    [[ "$backup" == [yY] ]] && cp "$fp" "$fp.bak" && echo -e "${CYAN}🔐 Backup saved to $fp.bak${RESET}"
+
+    call_request_with_continuation "Modify this code:\n\n$(<"$fp")\n\nInstructions:\n$instr" "$fp"
 }
 
 # ========== FILE ANALYSIS ==========
